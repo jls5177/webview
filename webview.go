@@ -127,6 +127,7 @@ type WebView interface {
 	// f must be a function
 	// f must return either value and error or just error
 	Bind(name string, f interface{}) error
+	Url() string
 }
 
 type webview struct {
@@ -214,6 +215,12 @@ func (w *webview) Dispatch(f func()) {
 	dispatch[index] = f
 	m.Unlock()
 	C.CgoWebViewDispatch(w.w, C.uintptr_t(index))
+}
+
+func (w *webview) Url() string {
+	url := (*C.char)(C.webview_url(w.w))
+	defer C.free(unsafe.Pointer(url))
+	return C.GoString(url)
 }
 
 //export _goCallbackWebviewDispatch

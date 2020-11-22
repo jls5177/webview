@@ -100,6 +100,9 @@ WEBVIEW_API void webview_bind(webview_t w, const char *name,
                                          void *arg),
                               void *arg);
 
+// Returns the URL currently opened in the webview
+WEBVIEW_API const char* webview_url(webview_t w);
+
 // Allows to return a value from the native binding. Original request pointer
 // must be provided to help internal RPC engine match requests with responses.
 // If status is zero - result is expected to be a valid JSON result value.
@@ -531,6 +534,10 @@ public:
                                    NULL, NULL);
   }
 
+  std::string url() {
+    return webkit_web_view_get_uri(WEBKIT_WEB_VIEW(m_webview));
+  }
+
 private:
   virtual void on_message(const std::string msg) = 0;
   GtkWidget *m_window;
@@ -716,6 +723,12 @@ public:
         objc_msgSend("NSString"_cls, "stringWithUTF8String:"_sel, js.c_str()),
         nullptr);
   }
+  std::string url() {
+    const char *c_string = (const char *)objc_msgSend(
+        objc_msgSend(objc_msgSend(m_webview, "URL"_sel), "absoluteString"_sel),
+        "UTF8String"_sel);
+    return c_string;
+  }
 
 private:
   virtual void on_message(const std::string msg) = 0;
@@ -772,6 +785,7 @@ public:
   virtual bool embed(HWND, bool, msg_cb_t) = 0;
   virtual void navigate(const std::string url) = 0;
   virtual void eval(const std::string js) = 0;
+  virtual std::string url() = 0;
   virtual void init(const std::string js) = 0;
   virtual void resize(HWND) = 0;
 };
@@ -832,6 +846,10 @@ public:
   void eval(const std::string js) override {
     m_webview.InvokeScriptAsync(
         L"eval", single_threaded_vector<hstring>({winrt::to_hstring(js)}));
+  }
+
+  std::string url() {
+    return m_webview.Source().AbsoluteUri;
   }
 
   void resize(HWND wnd) override {
@@ -915,6 +933,10 @@ public:
     LPCWSTR wjs = to_lpwstr(js);
     m_webview->ExecuteScript(wjs, nullptr);
     delete[] wjs;
+  }
+
+  std::string url() {
+    return ""
   }
 
 private:
@@ -1123,6 +1145,7 @@ public:
   void navigate(const std::string url) { m_browser->navigate(url); }
   void eval(const std::string js) { m_browser->eval(js); }
   void init(const std::string js) { m_browser->init(js); }
+  std::str url() { m_browser->url(); }
 
 private:
   virtual void on_message(const std::string msg) = 0;
@@ -1271,6 +1294,10 @@ WEBVIEW_API void webview_init(webview_t w, const char *js) {
 
 WEBVIEW_API void webview_eval(webview_t w, const char *js) {
   static_cast<webview::webview *>(w)->eval(js);
+}
+
+WEBVIEW_API const char* webview_url(webview_t w) {
+  return strdup(static_cast<webview::webview *>(w)->url().c_str());
 }
 
 WEBVIEW_API void webview_bind(webview_t w, const char *name,
