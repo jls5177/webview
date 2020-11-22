@@ -628,6 +628,8 @@ public:
     // Webview
     auto config = objc_msgSend("WKWebViewConfiguration"_cls, "new"_sel);
     m_manager = objc_msgSend(config, "userContentController"_sel);
+    auto dataStore = objc_msgSend(config, "websiteDataStore"_sel);
+    objc_msgSend(config, "setWebsiteDataStore:"_sel, objc_msgSend("WKWebsiteDataStore"_cls, "nonPersistentDataStore"_sel));
     m_webview = objc_msgSend("WKWebView"_cls, "alloc"_sel);
     if (debug) {
       objc_msgSend(objc_msgSend(config, "preferences"_sel),
