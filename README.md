@@ -1,3 +1,9 @@
+# Fork Notes
+
+This fork is a work in progress and enhances the `webview.h` file to support isolating session data.
+
+----
+
 # webview
 
 [![Join the chat at https://gitter.im/zserge/webview](https://badges.gitter.im/zserge/webview.svg)](https://gitter.im/zserge/webview?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
