@@ -17,9 +17,9 @@ package webview
 #include <stdlib.h>
 #include <stdint.h>
 
-extern void _webviewDispatchGoCallback(void *);
+extern void _goCallbackWebviewDispatch(void *);
 static inline void _webview_dispatch_cb(webview_t w, void *arg) {
-	_webviewDispatchGoCallback(arg);
+	_goCallbackWebviewDispatch(arg);
 }
 static inline void CgoWebViewDispatch(webview_t w, uintptr_t arg) {
 	webview_dispatch(w, _webview_dispatch_cb, (void *)arg);
@@ -29,10 +29,10 @@ struct binding_context {
 	webview_t w;
 	uintptr_t index;
 };
-extern void _webviewBindingGoCallback(webview_t, char *, char *, uintptr_t);
+extern void _goCallbackWebviewBinding(webview_t, char *, char *, uintptr_t);
 static inline void _webview_binding_cb(const char *id, const char *req, void *arg) {
 	struct binding_context *ctx = (struct binding_context *) arg;
-	_webviewBindingGoCallback(ctx->w, (char *)id, (char *)req, ctx->index);
+	_goCallbackWebviewBinding(ctx->w, (char *)id, (char *)req, ctx->index);
 }
 static inline void CgoWebViewBind(webview_t w, const char *name, uintptr_t index) {
 	struct binding_context *ctx = calloc(1, sizeof(struct binding_context));
@@ -216,8 +216,8 @@ func (w *webview) Dispatch(f func()) {
 	C.CgoWebViewDispatch(w.w, C.uintptr_t(index))
 }
 
-//export _webviewDispatchGoCallback
-func _webviewDispatchGoCallback(index unsafe.Pointer) {
+//export _goCallbackWebviewDispatch
+func _goCallbackWebviewDispatch(index unsafe.Pointer) {
 	m.Lock()
 	f := dispatch[uintptr(index)]
 	delete(dispatch, uintptr(index))
@@ -225,8 +225,8 @@ func _webviewDispatchGoCallback(index unsafe.Pointer) {
 	f()
 }
 
-//export _webviewBindingGoCallback
-func _webviewBindingGoCallback(w C.webview_t, id *C.char, req *C.char, index uintptr) {
+//export _goCallbackWebviewBinding
+func _goCallbackWebviewBinding(w C.webview_t, id *C.char, req *C.char, index uintptr) {
 	m.Lock()
 	f := bindings[uintptr(index)]
 	m.Unlock()
